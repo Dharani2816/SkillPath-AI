@@ -1,0 +1,381 @@
+// SkillPath AI — prototype data model
+// Outcome data is tagged DEMO or VERIFIED so official datasets can replace demo rows later.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  PARENT
+  COUNSELLOR
+  ADMIN
+}
+
+enum Language {
+  EN
+  TA
+}
+
+enum AreaType {
+  RURAL
+  SEMI_URBAN
+  URBAN
+}
+
+enum VerificationStatus {
+  VERIFIED
+  DEMO
+}
+
+enum ConcernType {
+  INCOME
+  JOB_SECURITY
+  SAFETY
+  SOCIAL_PERCEPTION
+  TRAINING_COST
+  CAREER_GROWTH
+  FURTHER_EDUCATION
+}
+
+enum ConcernStatus {
+  OPEN
+  ADDRESSED
+  ESCALATED
+}
+
+enum Sentiment {
+  CONCERNED
+  NEUTRAL
+  REASSURED
+}
+
+enum RequestStatus {
+  PENDING
+  CONTACTED
+  RESOLVED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+enum FamilyDecision {
+  EXPLORING
+  AGREED
+  UNDECIDED
+  DECLINED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role
+  phone        String?
+  language     Language @default(EN)
+  district     String?
+  state        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  studentProfile   StudentProfile?
+  parentProfile    ParentProfile?
+  assessments      Assessment[]
+  recommendations  Recommendation[]
+  roadmaps         Roadmap[]
+  conversations    Conversation[]
+  concernsRaised   FamilyConcern[]
+  requestsMade     CounsellorRequest[] @relation("RequestUser")
+  requestsAssigned CounsellorRequest[] @relation("RequestCounsellor")
+  sentimentRecords SentimentRecord[]
+}
+
+model StudentProfile {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  age             Int?
+  gender          String?
+  educationLevel  String? // e.g. "10th Pass", "12th Pass", "ITI", "Diploma"
+  stream          String? // e.g. "Science", "Commerce", "Arts"
+  marksPercent    Float?
+  areaType        AreaType?
+  householdIncome String? // bracket: BELOW_1L | 1L_3L | 3L_6L | ABOVE_6L (per year)
+  interests       String[]
+  familyId        String?
+  family          Family?   @relation(fields: [familyId], references: [id])
+}
+
+model ParentProfile {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  relation       String? // FATHER | MOTHER | GUARDIAN
+  occupation     String?
+  educationLevel String?
+  familyId       String?
+  family         Family? @relation(fields: [familyId], references: [id])
+}
+
+model Family {
+  id               String         @id @default(cuid())
+  name             String
+  connectCode      String         @unique
+  district         String?
+  state            String?
+  areaType         AreaType?
+  householdIncome  String?
+  decision         FamilyDecision @default(EXPLORING)
+  selectedCareerId String?
+  selectedCareer   Career?        @relation(fields: [selectedCareerId], references: [id])
+  createdAt        DateTime       @default(now())
+
+  students           StudentProfile[]
+  parents            ParentProfile[]
+  concerns           FamilyConcern[]
+  conversations      Conversation[]
+  counsellorRequests CounsellorRequest[]
+  sentimentRecords   SentimentRecord[]
+}
+
+model Career {
+  id                String   @id @default(cuid())
+  slug              String   @unique
+  name              String
+  nameTa            String
+  sector            String
+  description       String
+  descriptionTa     String
+  requiredEducation String
+  minEducation      String // key of EDUCATION_RANK, e.g. "10th Pass"
+  skills            String[] // human-readable skills taught
+  skillTags         String[] // skill tags used by the matcher
+  interests         String[] // interest tags used by the matcher
+  aptitudes         String[] // aptitude tags used by the matcher
+  trainingDuration  String
+  trainingMonths    Int
+  trainingCostMin   Int // INR
+  trainingCostMax   Int
+  salaryMin         Int // INR / month, entry level
+  salaryMax         Int // INR / month, experienced
+  demandLevel       String // HIGH | MEDIUM | LOW
+  demandScore       Int // 0-100
+  growthScore       Int // 0-100
+  careerProgression String[]
+  nsqfEntryLevel    Int
+  nsqfMaxLevel      Int
+  nsqfInfo          String
+  furtherEducation  String[]
+  safetyNotes       String
+  safetyNotesTa     String
+  perceptionNotes   String
+  perceptionNotesTa String
+  createdAt         DateTime @default(now())
+
+  courses         Course[]
+  outcomes        OutcomeData[]
+  recommendations Recommendation[]
+  roadmaps        Roadmap[]
+  families        Family[]
+  concerns        FamilyConcern[]
+  conversations   Conversation[]
+}
+
+model TrainingProvider {
+  id       String  @id @default(cuid())
+  name     String
+  type     String // GOVT_ITI | PRIVATE_ITI | SKILL_CENTRE | POLYTECHNIC
+  district String
+  state    String
+  contact  String?
+  isDemo   Boolean @default(true)
+
+  courses  Course[]
+  outcomes OutcomeData[]
+}
+
+model Course {
+  id             String           @id @default(cuid())
+  name           String
+  careerId       String
+  career         Career           @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  providerId     String
+  provider       TrainingProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  nsqfLevel      Int
+  durationMonths Int
+  fee            Int
+  mode           String // FULL_TIME | PART_TIME | WEEKEND
+  certification  String
+}
+
+model OutcomeData {
+  id                    String             @id @default(cuid())
+  careerId              String
+  career                Career             @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  providerId            String?
+  provider              TrainingProvider?  @relation(fields: [providerId], references: [id])
+  district              String
+  state                 String
+  placementRate         Float // percent
+  earningsMin           Int // INR / month
+  earningsMax           Int
+  avgEarnings           Int
+  nsqfLevel             Int
+  nextProgressionLevel  String
+  furtherEducationRoute String
+  sampleSize            Int?
+  dataYear              Int
+  dataSource            String
+  verificationStatus    VerificationStatus @default(DEMO)
+  notes                 String?
+  createdAt             DateTime           @default(now())
+
+  @@index([careerId])
+  @@index([district])
+}
+
+model Assessment {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scores      Json // dimension -> 0..100
+  createdAt   DateTime           @default(now())
+  answers     AssessmentAnswer[]
+  recommendations Recommendation[]
+}
+
+model AssessmentAnswer {
+  id           String     @id @default(cuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  questionId   String
+  optionId     String
+}
+
+model Recommendation {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessmentId  String?
+  assessment    Assessment? @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
+  careerId      String
+  career        Career      @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  rank          Int
+  overallScore  Int
+  interestScore Int
+  skillScore    Int
+  aptitudeScore Int
+  localScore    Int
+  growthScore   Int
+  reasons       String[]
+  reasonsTa     String[]
+  createdAt     DateTime    @default(now())
+
+  @@index([userId])
+}
+
+model FamilyConcern {
+  id         String        @id @default(cuid())
+  familyId   String
+  family     Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  raisedById String
+  raisedBy   User          @relation(fields: [raisedById], references: [id], onDelete: Cascade)
+  careerId   String?
+  career     Career?       @relation(fields: [careerId], references: [id])
+  type       ConcernType
+  details    String?
+  status     ConcernStatus @default(OPEN)
+  createdAt  DateTime      @default(now())
+  resolvedAt DateTime?
+
+  @@index([type])
+}
+
+model Conversation {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyId    String?
+  family      Family?      @relation(fields: [familyId], references: [id])
+  careerId    String?
+  career      Career?      @relation(fields: [careerId], references: [id])
+  language    Language     @default(EN)
+  concernType ConcernType?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  messages           ChatMessage[]
+  sentimentRecords   SentimentRecord[]
+  counsellorRequests CounsellorRequest[]
+}
+
+model ChatMessage {
+  id              String       @id @default(cuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            MessageRole
+  content         String
+  concernType     ConcernType?
+  sentiment       Sentiment?
+  needsEscalation Boolean      @default(false)
+  sources         Json? // outcome rows / career fields used to ground the answer
+  createdAt       DateTime     @default(now())
+}
+
+model CounsellorRequest {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation("RequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  familyId       String?
+  family         Family?       @relation(fields: [familyId], references: [id])
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  counsellorId   String?
+  counsellor     User?         @relation("RequestCounsellor", fields: [counsellorId], references: [id])
+  concernType    ConcernType?
+  concern        String
+  language       Language      @default(EN)
+  location       String?
+  preferredTime  String?
+  status         RequestStatus @default(PENDING)
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model SentimentRecord {
+  id              String       @id @default(cuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyId        String?
+  family          Family?      @relation(fields: [familyId], references: [id])
+  role            Role
+  concernType     ConcernType?
+  beforeSentiment Sentiment
+  afterSentiment  Sentiment
+  district        String?
+  createdAt       DateTime     @default(now())
+}
+
+model Roadmap {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  careerId  String
+  career    Career   @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  steps     Json // [{ stage, title, titleTa, description, duration, nsqfLevel }]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, careerId])
+}
