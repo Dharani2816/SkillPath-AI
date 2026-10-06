@@ -102,12 +102,13 @@ The main demo journey is: Student → Assessment → Recommendations → Parent 
 | Public | Landing, Login (one-tap demo accounts), Register (learner or parent), Explore careers, Career detail, Outcome evidence |
 | Student | Dashboard, Profile, Assessment, Results, My matches, Career roadmap, Family Centre, AI counsellor, Family career plan (printable) |
 | Parent | Dashboard, Family Centre, Career evidence, Concerns, AI counsellor, Talk to a counsellor |
+| Counsellor | Dashboard with Pending / Active / Resolved request tabs; each request shows the family, district, language, concern, career and latest sentiment; a detail view shows the conversation summary, lets the counsellor add notes, mark contacted and mark resolved |
+| Admin | Family Resistance & Counselling dashboard: summary cards (families counselled, concerns raised/resolved, escalations, active conversations), a "why are families resisting" concern chart, a by-district table and by-trade chart for where resistance is concentrated, a before/after sentiment comparison, and a 14-day conversation engagement chart — all read from `GET /admin/analytics`, with an on-screen demo-data notice |
 
 - **Language.** The English / தமிழ் toggle in the header switches every label on the main journey. After login, the app opens in the user's saved language. Chat questions go to the AI in the selected language.
 - **Family Decision Centre.** Shows the learner's profile, the recommended career (switchable between the top 3) and its evidence. Families tap large concern cards, which are saved to the backend and open the AI counsellor with that question already asked. The family's decision is recorded on the same screen.
 - **AI counsellor.** Each answer comes with evidence cards for placement, earnings, training and NSQF progression, with the card for the asked concern highlighted. The cards carry a DEMO / VERIFIED badge and the data source. Suggested questions are tap-to-ask. 👍 / 👎 feedback updates the stored sentiment. Answers can be read aloud when the browser has a voice for that language. When the AI can't answer, the family stays concerned or they tap 👎, a "Would you like to speak with a counsellor?" card appears. It opens a prefilled request form (concern, language, district, call time).
 - **Low-literacy design.** Large text and tap targets, icons on every action, buttons instead of dropdowns, short sentences, visual timelines and progress rings, and icon tab navigation on phones.
-- **Not built yet.** Counsellor and admin accounts only see a read-only request queue; their consoles come in the next phase.
 
 ## Database
 

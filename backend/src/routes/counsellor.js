@@ -11,7 +11,13 @@ const include = {
   user: { select: { id: true, name: true, email: true, phone: true, role: true, district: true } },
   family: { select: { id: true, name: true, district: true, decision: true } },
   counsellor: { select: { id: true, name: true } },
-  conversation: { include: { messages: { orderBy: { createdAt: 'asc' } } } },
+  conversation: {
+    include: {
+      messages: { orderBy: { createdAt: 'asc' } },
+      career: { select: { id: true, name: true, nameTa: true } },
+      sentimentRecords: { orderBy: { createdAt: 'desc' } },
+    },
+  },
 };
 
 // { concern, concernType?, conversationId?, language?, location?, preferredTime? }
