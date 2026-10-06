@@ -10,6 +10,7 @@ const CONCERN_TYPES = [
   'TRAINING_COST',
   'CAREER_GROWTH',
   'FURTHER_EDUCATION',
+  'LOCATION',
 ];
 const REQUEST_STATUSES = ['PENDING', 'CONTACTED', 'RESOLVED'];
 const FAMILY_DECISIONS = ['EXPLORING', 'AGREED', 'UNDECIDED', 'DECLINED'];
@@ -22,6 +23,7 @@ const CONCERN_LABELS = {
   TRAINING_COST: { EN: 'Training Cost', TA: 'பயிற்சி செலவு' },
   CAREER_GROWTH: { EN: 'Career Growth', TA: 'தொழில் முன்னேற்றம்' },
   FURTHER_EDUCATION: { EN: 'Further Education', TA: 'மேல்படிப்பு' },
+  LOCATION: { EN: 'Location', TA: 'இடம் / தூரம்' },
 };
 
 // Ordinal ranks used to check whether a learner meets a trade's minimum education.

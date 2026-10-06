@@ -18,6 +18,13 @@ Learner + Parent → AI counselling → Career evidence → Parent concerns
 
 ```
 skillpath-ai/
+├── frontend/                React 18 + Vite + Tailwind v4 + Recharts + Lucide
+│   └── src/
+│       ├── api/client.js     Axios instance (JWT header, /api proxy)
+│       ├── context/          Auth + language (EN / TA) providers
+│       ├── lib/i18n.js       All UI strings in English and Tamil, concern metadata
+│       ├── components/       Layout, evidence cards, roadmap timeline, counsellor form…
+│       └── pages/            Public, student/ and parent/ screens
 └── backend/                 Node.js + Express + Prisma (PostgreSQL)
     ├── prisma/
     │   ├── schema.prisma    Data model (17 models)
@@ -43,7 +50,7 @@ skillpath-ai/
                 └── llmProvider.js Optional Anthropic / OpenAI-compatible LLM
 ```
 
-It is a single Express app on a single Postgres database, with no extra infrastructure. The React + Vite frontend comes in the next phase. CORS is preconfigured for `http://localhost:5173`.
+It is a single Express app on a single Postgres database, with no extra infrastructure. The Vite dev server proxies `/api` to the backend on port 5000.
 
 ## Setup
 
@@ -57,7 +64,15 @@ npm run setup                 # creates tables (migration "init") + seeds demo d
 npm run dev                   # API on http://localhost:5000
 ```
 
-In a second terminal, run the end-to-end test:
+In a second terminal, start the frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev                   # app on http://localhost:5173
+```
+
+Run the backend end-to-end API test (with the backend running):
 
 ```bash
 cd backend && npm test
@@ -78,12 +93,28 @@ All demo accounts use the password **`SkillPath@123`**.
 
 The seed also creates 16 synthetic families across 8 Tamil Nadu districts (`<name>.student@…` / `<name>.parent@…`, e.g. `karthik.parent@skillpath.demo`). Their chats run through the real AI pipeline, so the dashboard has realistic concern and sentiment patterns. Rural districts (Villupuram, Dharmapuri) are scripted to show higher social-perception and safety resistance.
 
+## Frontend
+
+The main demo journey is: Student → Assessment → Recommendations → Parent connection → Parent concern → Evidence → AI counselling → Decision or counsellor escalation.
+
+| Area | Screens |
+|---|---|
+| Public | Landing, Login (one-tap demo accounts), Register (learner or parent), Explore careers, Career detail, Outcome evidence |
+| Student | Dashboard, Profile, Assessment, Results, My matches, Career roadmap, Family Centre, AI counsellor, Family career plan (printable) |
+| Parent | Dashboard, Family Centre, Career evidence, Concerns, AI counsellor, Talk to a counsellor |
+
+- **Language.** The English / தமிழ் toggle in the header switches every label on the main journey. After login, the app opens in the user's saved language. Chat questions go to the AI in the selected language.
+- **Family Decision Centre.** Shows the learner's profile, the recommended career (switchable between the top 3) and its evidence. Families tap large concern cards, which are saved to the backend and open the AI counsellor with that question already asked. The family's decision is recorded on the same screen.
+- **AI counsellor.** Each answer comes with evidence cards for placement, earnings, training and NSQF progression, with the card for the asked concern highlighted. The cards carry a DEMO / VERIFIED badge and the data source. Suggested questions are tap-to-ask. 👍 / 👎 feedback updates the stored sentiment. Answers can be read aloud when the browser has a voice for that language. When the AI can't answer, the family stays concerned or they tap 👎, a "Would you like to speak with a counsellor?" card appears. It opens a prefilled request form (concern, language, district, call time).
+- **Low-literacy design.** Large text and tap targets, icons on every action, buttons instead of dropdowns, short sentences, visual timelines and progress rings, and icon tab navigation on phones.
+- **Not built yet.** Counsellor and admin accounts only see a read-only request queue; their consoles come in the next phase.
+
 ## Database
 
 | Area | Models |
 |---|---|
 | People | `User` (role STUDENT / PARENT / COUNSELLOR / ADMIN, language EN / TA), `StudentProfile` (education, area type, income bracket), `ParentProfile` |
-| Family | `Family` (connect code, district, decision, selected career), `FamilyConcern` (7 concern types; OPEN → ESCALATED → ADDRESSED) |
+| Family | `Family` (connect code, district, decision, selected career), `FamilyConcern` (8 concern types incl. LOCATION; OPEN → ESCALATED → ADDRESSED) |
 | Catalogue | `Career` (bilingual, NSQF entry/max, progression, further education, safety & perception notes), `TrainingProvider`, `Course` |
 | Evidence | `OutcomeData`: placement rate, earnings range/average, NSQF level, next progression level, further-education route, sample size, data source, **verificationStatus `VERIFIED` / `DEMO`** |
 | Matching | `Assessment` (tag scores), `AssessmentAnswer`, `Recommendation` (component scores + bilingual reasons), `Roadmap` |
@@ -101,6 +132,7 @@ All endpoints are under `/api`. Authenticated endpoints need `Authorization: Bea
 | POST | `/auth/login` | – | Returns `{ token, user }` |
 | GET / PUT | `/profile` | any | View / update user + role profile (district, education, income bracket, language…) |
 | GET | `/assessment/questions` | – | 10 bilingual questions (scoring tags hidden) |
+| GET | `/assessment/latest` | student / parent | Latest scores grouped into interests, aptitude, skills, work style and learning, plus readiness and strengths (parents see their child's) |
 | POST | `/assessment/submit` | student | `{ answers: [{ questionId, optionId }] }`. Scores the answers and generates the top 3 matches |
 | POST | `/recommendations/generate` | student | Regenerates the top 3 from the latest assessment |
 | GET | `/recommendations` | student / parent / staff | Top 3 with component scores, reasons, local evidence and roadmap. Parents see their linked child's results; staff pass `?studentId=` |
@@ -166,7 +198,7 @@ The top 3 are stored with every component score and plain-language reasons in En
 **2. Counselling chat.** For every message the backend:
 
 1. Builds the family context: the learner's district, education and income bracket, the career (explicit, then the family's choice, then the top recommendation), outcome data for that district (falling back to state level) and courses.
-2. Detects the concern (income, job security, safety, social perception, cost, growth, further education) and the sentiment with English + Tamil keyword rules.
+2. Detects the concern (income, job security, safety, social perception, cost, growth, further education, location) and the sentiment with English + Tamil keyword rules.
 3. Answers:
    - **No API key (default):** the offline `demoEngine` fills simple, bilingual answer templates with the stored figures. For example, a cost answer works out how many months of first-job salary it takes to pay back the fee. It adds a scholarship hint for low-income households and a bridge-course note when the learner lacks the minimum education.
    - **With `LLM_API_KEY`:** an LLM (Anthropic by default, or any OpenAI-compatible endpoint) gets *only* the same grounding facts as JSON. It is told never to invent numbers, to reply in simple Tamil or English, and to emit `[ESCALATE]` when the facts don't cover the question. If the LLM call fails, the demo engine answers instead.

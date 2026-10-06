@@ -103,6 +103,23 @@ const ANSWERS = {
     }
     return `Vocational training does not close the door to further studies. After ${c.name} training, routes include: ${routes}. Many learners continue studying while earning.`;
   },
+  LOCATION(ctx, lang) {
+    const c = ctx.career;
+    const district = ctx.district;
+    const near = district ? c.courses.filter((x) => x.provider.district.toLowerCase() === district.toLowerCase()) : [];
+    const o = ctx.outcomeSummary;
+    if (!near.length && o.scope !== 'DISTRICT') return null;
+    if (lang === 'TA') {
+      let text = '';
+      if (near.length) text += `${district} மாவட்டத்திலேயே பயிற்சி பெறலாம்: ${near.map((x) => x.provider.name).join(', ')}. வெளியூர் செல்ல வேண்டியதில்லை. `;
+      if (o.scope === 'DISTRICT') text += `${district} பகுதியில் பயிற்சி பெற்றவர்களில் ${o.placementRate}% பேருக்கு வேலை கிடைத்தது.`;
+      return text.trim();
+    }
+    let text = '';
+    if (near.length) text += `Training is available in ${district} itself: ${near.map((x) => x.provider.name).join(', ')}, so your child does not need to move away. `;
+    if (o.scope === 'DISTRICT') text += `In ${district}, ${o.placementRate}% of trained learners found work, so jobs are available close to home.`;
+    return text.trim();
+  },
 };
 
 function overview(ctx, lang) {
@@ -139,7 +156,7 @@ function respond(ctx, { message, concernType, language, wantsHuman, isGreeting }
   const answer = concernType ? ANSWERS[concernType](ctx, lang) : overview(ctx, lang);
   if (!answer) return { reply: NO_DATA[lang], needsEscalation: true };
 
-  const usedOutcomes = ['INCOME', 'JOB_SECURITY', 'TRAINING_COST', null].includes(concernType || null) && ctx.outcomeSummary.count;
+  const usedOutcomes = ['INCOME', 'JOB_SECURITY', 'TRAINING_COST', 'LOCATION', null].includes(concernType || null) && ctx.outcomeSummary.count;
   const disclaimer = usedOutcomes && ctx.outcomeSummary.isDemo ? `\n\n(${DEMO_DISCLAIMER[lang]})` : '';
   return {
     reply: `${answer}${tailoring(ctx, lang)}${disclaimer}\n\n${FOLLOW_UP[lang]}`,

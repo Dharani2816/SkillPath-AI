@@ -7,6 +7,7 @@ const CONCERN_KEYWORDS = {
   SOCIAL_PERCEPTION: ['respect', 'status', 'society', 'relative', 'marriage', 'prestige', 'shame', 'low job', 'people say', 'மரியாதை', 'சமூக', 'உறவினர்', 'திருமண', 'கௌரவ', 'மதிப்பு'],
   TRAINING_COST: ['fee', 'cost', 'afford', 'loan', 'scholarship', 'expensive', 'கட்டணம்', 'செலவு', 'கடன்', 'உதவித்தொகை'],
   CAREER_GROWTH: ['growth', 'promotion', 'future', 'grow', 'business', 'later', 'senior', 'முன்னேற்ற', 'பதவி உயர்வு', 'எதிர்கால', 'சொந்த தொழில்'],
+  LOCATION: ['location', 'far', 'distance', 'travel', 'near', 'close to home', 'relocat', 'move to', 'hostel', 'away from home', 'local', 'தூரம்', 'அருகில்', 'வெளியூர்', 'பயணம்', 'விடுதி', 'உள்ளூர்'],
   FURTHER_EDUCATION: ['degree', 'diploma', 'study further', 'college', 'higher stud', 'engineering', 'continue stud', 'மேல்படிப்பு', 'பட்டம்', 'டிப்ளமோ', 'கல்லூரி', 'படிப்பை தொடர'],
 };
 

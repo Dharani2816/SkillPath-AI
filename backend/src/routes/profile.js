@@ -34,7 +34,7 @@ router.put(
     await prisma.user.update({ where: { id: req.user.id }, data: userData });
 
     if (req.user.role === 'STUDENT' && req.user.studentProfile) {
-      const data = pick(body, ['gender', 'educationLevel', 'stream', 'interests']);
+      const data = pick(body, ['gender', 'educationLevel', 'stream', 'interests', 'learningPreference', 'location']);
       if (body.age !== undefined) data.age = Number(body.age);
       if (body.marksPercent !== undefined) data.marksPercent = Number(body.marksPercent);
       if (body.areaType) data.areaType = enumValue(body.areaType, AREA_TYPES, 'areaType');

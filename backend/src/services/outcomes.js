@@ -24,6 +24,9 @@ function summariseOutcomes(outcomes, district) {
     furtherEducationRoute: rows[0].furtherEducationRoute,
     isDemo: rows.some((o) => o.verificationStatus === 'DEMO'),
     dataSources: [...new Set(rows.map((o) => o.dataSource))],
+    dataYear: Math.max(...rows.map((o) => o.dataYear)),
+    lastUpdated: rows.reduce((m, o) => (o.updatedAt && (!m || o.updatedAt > m) ? o.updatedAt : m), null),
+    verificationStatus: rows.every((o) => o.verificationStatus === 'VERIFIED') ? 'VERIFIED' : 'DEMO',
   };
 }
 

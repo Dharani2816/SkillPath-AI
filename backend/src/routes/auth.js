@@ -47,6 +47,8 @@ router.post(
           areaType: enumValue(req.body.areaType, AREA_TYPES, 'areaType'),
           householdIncome: enumValue(req.body.householdIncome, INCOME_BRACKETS, 'householdIncome'),
           interests: Array.isArray(req.body.interests) ? req.body.interests : [],
+          learningPreference: req.body.learningPreference,
+          location: req.body.location,
         },
       });
       await createFamilyForStudent(user, profile);

@@ -41,6 +41,7 @@ enum ConcernType {
   TRAINING_COST
   CAREER_GROWTH
   FURTHER_EDUCATION
+  LOCATION
 }
 
 enum ConcernStatus {
@@ -110,6 +111,8 @@ model StudentProfile {
   areaType        AreaType?
   householdIncome String? // bracket: BELOW_1L | 1L_3L | 3L_6L | ABOVE_6L (per year)
   interests       String[]
+  learningPreference String? // PRACTICAL | VISUAL | READING | TEACHER
+  location        String? // village / town
   familyId        String?
   family          Family?   @relation(fields: [familyId], references: [id])
 }
@@ -237,6 +240,7 @@ model OutcomeData {
   verificationStatus    VerificationStatus @default(DEMO)
   notes                 String?
   createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
 
   @@index([careerId])
   @@index([district])

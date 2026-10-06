@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', 'Noto Sans Tamil', ui-sans-serif, system-ui, sans-serif;
+
+  /* Deep blue — trust / institution */
+  --color-brand-50: #eef3fa;
+  --color-brand-100: #dce6f5;
+  --color-brand-200: #b8cceb;
+  --color-brand-300: #8aa9d9;
+  --color-brand-500: #2b5fa8;
+  --color-brand-600: #1f4f95;
+  --color-brand-700: #1a3f7a;
+  --color-brand-800: #13315c;
+  --color-brand-900: #0b2545;
+
+  /* Teal — growth / reassurance */
+  --color-accent-50: #effaf8;
+  --color-accent-100: #d3f1ec;
+  --color-accent-500: #14a38b;
+  --color-accent-600: #0f8a76;
+  --color-accent-700: #0c6f60;
+
+  --color-surface: #f4f6f9;
+}
+
+html {
+  font-size: 17px;
+}
+
+body {
+  @apply bg-surface text-slate-800 antialiased;
+}
+
+/* Tamil script needs a little more line height to stay readable. */
+:lang(ta) body,
+html[lang='ta'] body {
+  line-height: 1.65;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-accent-500);
+  outline-offset: 2px;
+}
+
+@media print {
+  header,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+}
